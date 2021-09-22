@@ -44,7 +44,7 @@ function getNextOperatorIndex(expression, tier) {
   return nextOperatorIndex;
 }
 
-function findClosingParentheses(expression, openingParenthesesIndex) {
+function findClosingParenthesesIndex(expression, openingParenthesesIndex) {
   let parenthesesDepth = 1;
   for (let i = openingParenthesesIndex + 1; i < expression.length; i += 1) {
     if (expression[i] === '(') {
@@ -63,11 +63,23 @@ function evaluateExpression(expressionArray) {
   const expression = [...expressionArray];
   let openingParenthesesIndex = expression.findIndex((o) => o === '(');
   while (openingParenthesesIndex !== -1) {
-    const closingParenthesesIndex = findClosingParentheses(expression, openingParenthesesIndex);
-    const subexpression = expression.slice(openingParenthesesIndex + 1, closingParenthesesIndex);
-    const subexpressionResult = evaluateExpression(subexpression); // recurse into subexpression
-    // we need to add two to length because subexpression doesn't include its bounding parentheses
-    expression.splice(openingParenthesesIndex, subexpression.length + 2, subexpressionResult);
+    const closingParenthesesIndex = findClosingParenthesesIndex(
+      expression,
+      openingParenthesesIndex,
+    );
+    const subexpression = expression.slice(
+      openingParenthesesIndex + 1,
+      closingParenthesesIndex,
+    );
+    // recurse into subexpression
+    const subexpressionResult = evaluateExpression(subexpression);
+    // we need to add two to length
+    // because subexpression doesn't include its bounding parentheses
+    expression.splice(
+      openingParenthesesIndex,
+      subexpression.length + 2,
+      subexpressionResult,
+    );
     openingParenthesesIndex = expression.findIndex((o) => o === '(');
   }
   evaluationTiers.forEach((tier) => {
@@ -84,7 +96,11 @@ function evaluateExpression(expressionArray) {
 }
 
 function parseExpression(expressionString) {
-  const expressionArray = Array.from(expressionString.matchAll(/-?[0-9]+\.?[0-9]*|\*{2}|\*{1}|\/|\+|-|\(|\)/g)).map((v) => v[0]);
+  const expressionArray = Array.from(
+    expressionString.matchAll(
+      /-?[0-9]+\.?[0-9]*|\*{2}|\*{1}|\/|\+|-|\(|\)/g
+    )
+  ).map((v) => v[0]);
   return expressionArray.map((term) => {
     if (Number.isNaN(parseFloat(term))) {
       return term;
